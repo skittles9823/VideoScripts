@@ -1,7 +1,7 @@
 Param(
     $BasePath = $args[0],
     $FileSize = ">100MB", # Syntax: [>][<]size[KB|MB|GB]
-    $ExtraCompressionProfile = "SkittlesExtraComp", # SkittlesExtraComp
+    $ExtraCompressionProfile = "null", # SkittlesExtraComp
     # HandBrake options. Full list: https://handbrake.fr/docs/en/latest/cli/command-line-reference.html
     # Use "--preset-import-file .\SkittlesPresets.json" to use the presets I've made instead
     $HandBrakeOptions = "--preset-import-gui", # Import and use presets from HandBrakeGUI
