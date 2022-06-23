@@ -1,7 +1,7 @@
 Param(
     $BasePath = $args[0],
     $FileSize = ">1KB", # Syntax: [>][<]size[KB|MB|GB]
-    $EverythingOptions = "path:$BasePath ext:mp4;m4v;mkv;webm;wmv;avi;mov;mpeg;flv size:$FileSize !-NEW"
+    $EverythingOptions = "path:$BasePath ext:mp4;m4v;mkv;webm;wmv;avi;mov;mpeg;flv;divx size:$FileSize !-NEW"
     # path:$BasePath ext:mp4;m4v;mkv;webm;wmv;avi;mov;mpeg;flv size:$FileSize !-NEW
 )
 

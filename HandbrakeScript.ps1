@@ -5,9 +5,8 @@ Param(
     # HandBrake options. Full list: https://handbrake.fr/docs/en/latest/cli/command-line-reference.html
     # Use "--preset-import-file .\SkittlesPresets.json" to use the presets I've made instead
     $HandBrakeOptions = "--preset-import-gui", # Import and use presets from HandBrakeGUI
-    $EverythingOptions = "path:$BasePath ext:mp4;m4v;mkv size:$FileSize !-NEW",
-    # If you decide to add extensions to look for, please also add to the switch case on line #58
-    # path:$BasePath ext:mp4;m4v;mkv;webm;wmv;avi;mov;mpeg;flv size:$FileSize !-NEW
+    $EverythingOptions = "path:$BasePath ext:mp4;m4v;mkv;webm;wmv;avi;mov;mpeg;flv;divx size:$FileSize !-NEW",
+    # path:$BasePath ext:mp4;m4v;mkv;webm;wmv;avi;mov;mpeg;flv;divx size:$FileSize !-NEW
     $Logging = "SingleLog" #Console, PerFile, SingleLog. Console drops all info to console window, perfile creates a new log for each file, singlefile will create a new file for each day.
 )
 
@@ -56,11 +55,13 @@ $fileCount = $num.count
 foreach ($File in $EverythingList) {
     $i++;
     Switch ($File.Extension) {
-        { '.webm', '.wmv', '.avi', '.mov', '.mpeg', '.flv' } {
-            $FinalName = "$($File.Directory)\$($File.BaseName).mkv"
-        }
         { '.mp4', '.m4v', '.mkv' } {
             $FinalName = "$($File.Directory)\$($File.BaseName)$($File.Extension)"
+            $OutputFile = "$($File.Directory)\$($File.BaseName)-NEW$($File.Extension)"
+        }
+        { '.webm', '.wmv', '.avi', '.mov', '.mpeg', '.flv', '.divx' } {
+            $FinalName = "$($File.Directory)\$($File.BaseName).mkv"
+            $OutputFile = "$($File.Directory)\$($File.BaseName)-NEW.mkv"
         }
     }
     $progress = ($i / $fileCount) * 100
@@ -72,9 +73,6 @@ foreach ($File in $EverythingList) {
             $Codec[2] = 0
         }
         if ($Codec[0] -ne "hevc") {
-            # File name + "-NEW$($File.Extension)" we want it to be an $FileFormat file and we don't want to overwrite the file we are reading from if it is already a .$FileFormat
-            $OutputFile = "$($File.Directory)\$($File.BaseName)-NEW$($File.Extension)"
-
             # Check that the Output file does not already exist, if it does delete it so the new conversions works as intended.
             if (Test-Path "$OutputFile") {
                 Remove-Item "$OutputFile" -Force
@@ -115,7 +113,7 @@ foreach ($File in $EverythingList) {
                 & HandBrakeCLI.exe $HandBrakeOptions -i "$InputFile" -o "$OutputFile"
             }
             else {
-                & HandBrakeCLI.exe $HandBrakeOptions -i "$InputFile" -o "$OutputFile" 2> $LogPath
+                & HandBrakeCLI.exe $HandBrakeOptions -i "$InputFile" -o "$OutputFile" 2>> $LogPath
             }
             Start-Sleep -s 10
             # Check to make sure that the output file actually exists so that if there was a conversion error we don't delete the original
@@ -130,7 +128,7 @@ foreach ($File in $EverythingList) {
                             & HandBrakeCLI.exe $HandBrakeOptions -Z $ExtraCompressionProfile -i "$InputFile" -o "$OutputFile"
                         }
                         else {
-                            & HandBrakeCLI.exe $HandBrakeOptions -Z $ExtraCompressionProfile -i "$InputFile" -o "$OutputFile" 2> $LogPath
+                            & HandBrakeCLI.exe $HandBrakeOptions -Z $ExtraCompressionProfile -i "$InputFile" -o "$OutputFile" 2>> $LogPath
                         }
                         $EndingFile = Get-Item $OutputFile | Select-Object Length
                         $EndingFileSize = $EndingFile.Length / 1GB
@@ -146,7 +144,7 @@ foreach ($File in $EverythingList) {
                             Write-Host "New ending file size is $([math]::Round($EndingFileSize,4))GB. Space saved is $([math]::Round($StartingFileSize-$EndingFileSize,4))GB" -ForegroundColor Green
                             $hash = @{
                                 "Height"   = $Codec[1]
-                                "Filename" = $File
+                                "Filename" = $FinalName
                                 "Bitrate"  = $Codec[2]
                             }
                             $newRow = New-Object PsObject -Property $hash
@@ -165,7 +163,7 @@ foreach ($File in $EverythingList) {
                     Write-Host "Ending file size is $([math]::Round($EndingFileSize,4))GB. Space saved is $([math]::Round($StartingFileSize-$EndingFileSize,4))GB" -ForegroundColor Green
                     $hash = @{
                         "Height"   = $Codec[1]
-                        "Filename" = $File
+                        "Filename" = $FinalName
                         "Bitrate"  = $Codec[2]
                     }
                     $newRow = New-Object PsObject -Property $hash
